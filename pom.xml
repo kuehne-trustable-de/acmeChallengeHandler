@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.trustable.ca3s</groupId>
+    <artifactId>acmeChallengeHandler</artifactId>
+    <version>1.0.0</version>
+
+    <name>acmeChallengeHandler</name>
+    <description>ACME Challenge handler libary</description>
+    <url>https://github.com/kuehne-trustable-de/acmeChallengeHandler/</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Andreas Kuehne</name>
+            <email>kuehne@trustable.de</email>
+            <organization>trustable solutions UG</organization>
+            <organizationUrl>https://trustable.de</organizationUrl>
+        </developer>
+        <developer>
+            <name>Damian Wabisch</name>
+            <email>damian@trustable.de</email>
+            <organization>trustable solutions UG</organization>
+            <organizationUrl>https://trustable.de</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>https://github.com/kuehne-trustable-de/acmeChallengeHandler.git</connection>
+        <developerConnection>https://github.com/kuehne-trustable-de/acmeChallengeHandler.git</developerConnection>
+        <url>https://github.com/kuehne-trustable-de/acmeChallengeHandler.git</url>
+    </scm>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <bouncyCastle.version>1.72</bouncyCastle.version>
+        <dnsjava.version>3.5.2</dnsjava.version>
+        <httpclient.version>4.5.14</httpclient.version>
+
+        <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
+        <maven-checkstyle.version>3.2.1</maven-checkstyle.version>
+        <checkstyle.version>10.9.3</checkstyle.version>
+        <spring-nohttp-checkstyle.version>0.0.4.RELEASE</spring-nohttp-checkstyle.version>
+
+        <slf4j.version>2.0.7</slf4j.version>
+        <logback.version>1.4.6</logback.version>
+
+        <junit.version>4.13.2</junit.version>
+
+        <license.licenseName>apache_v2</license.licenseName>
+        <license.inceptionYear>2016</license.inceptionYear>
+        <license.organizationName>Andreas Kuehne</license.organizationName>
+
+        <dependencyCheck.version>8.2.1</dependencyCheck.version>
+        <dependencyCheck.skip>true</dependencyCheck.skip>
+
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${bouncyCastle.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/dnsjava/dnsjava -->
+        <dependency>
+            <groupId>dnsjava</groupId>
+            <artifactId>dnsjava</artifactId>
+            <version>${dnsjava.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!-- plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <executions>
+                    <execution>
+                        <id>download-licenses</id>
+                        <goals>
+                            <goal>download-licenses</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <detectJavaApiLink>false</detectJavaApiLink>
+                    <source>${maven.compiler.source}</source>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependencyCheck.version}</version>
+                <configuration>
+                    <cveValidForHours>12</cveValidForHours>
+                    <failBuildOnCVSS>4</failBuildOnCVSS>
+                    <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
+                    <format>HTML</format>
+                    <skip>${dependencyCheck.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>trustable.eu</id>
+            <url>https://trustable.eu/artifactory/ca3s</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>trustable.eu</id>
+            <name>trustable Repository</name>
+            <url>https://trustable.eu/artifactory/ca3s</url>
+            <layout>default</layout>
+        </repository>
+        <snapshotRepository>
+            <uniqueVersion>true</uniqueVersion>
+            <id>Snap_trustable.eu</id>
+            <name>trustable Snapshots</name>
+            <url>https://trustable.eu/artifactory/ca3s</url>
+            <layout>default</layout>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>prepare-central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <detectJavaApiLink>false</detectJavaApiLink>
+                            <source>${maven.compiler.source}</source>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven-checkstyle.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.puppycrawl.tools</groupId>
+                                <artifactId>checkstyle</artifactId>
+                                <version>${checkstyle.version}</version>
+                            </dependency>
+                            <!--dependency>
+                                <groupId>io.spring.nohttp</groupId>
+                                <artifactId>nohttp-checkstyle</artifactId>
+                                <version>${spring-nohttp-checkstyle.version}</version>
+                            </dependency-->
+                        </dependencies>
+                        <configuration>
+                            <configLocation>checkstyle.xml</configLocation>
+                            <includes>pom.xml,README.md</includes>
+                            <excludes>.git/**/*,target/**/*,node_modules/**/*,node/**/*</excludes>
+                            <sourceDirectories>./</sourceDirectories>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>codeAnalysis</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
+
+</project>
