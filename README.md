@@ -1,2 +1,2 @@
 # acmeChallengeHandler
-Java library providid a set of implemtations for common ACME challanges
+Java library provided a set of implementations for common ACME challenges
