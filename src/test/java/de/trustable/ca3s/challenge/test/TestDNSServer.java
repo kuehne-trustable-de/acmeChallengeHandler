@@ -14,9 +14,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 import static de.trustable.ca3s.challenge.ChallengeValidator.ACME_CHALLENGE_PREFIX;
-import static de.trustable.ca3s.challenge.ChallengeValidatorTest.txtRecord1;
-import static de.trustable.ca3s.challenge.ChallengeValidatorTest.txtRecord2;
-import static de.trustable.ca3s.challenge.ChallengeValidatorTest.txtRecord3;
+import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord1;
+import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord2;
+import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord3;
 
 import static org.xbill.DNS.Name.*;
 

@@ -6,7 +6,7 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>acmeChallengeHandler</name>
     <description>ACME Challenge handler libary</description>
@@ -49,12 +49,13 @@
         <httpclient.version>4.5.14</httpclient.version>
 
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
-        <maven-checkstyle.version>3.2.1</maven-checkstyle.version>
-        <checkstyle.version>10.9.3</checkstyle.version>
+        <maven-checkstyle.version>3.2.2</maven-checkstyle.version>
+        <checkstyle.version>10.11.0</checkstyle.version>
         <spring-nohttp-checkstyle.version>0.0.4.RELEASE</spring-nohttp-checkstyle.version>
 
         <slf4j.version>2.0.7</slf4j.version>
         <logback.version>1.4.6</logback.version>
+        <wiremock.version>2.27.2</wiremock.version>
 
         <junit.version>4.13.2</junit.version>
 
@@ -110,6 +111,13 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

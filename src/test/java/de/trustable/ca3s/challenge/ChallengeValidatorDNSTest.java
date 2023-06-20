@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class ChallengeValidatorTest {
+public class ChallengeValidatorDNSTest {
 
-    static Logger LOG = LoggerFactory.getLogger(ChallengeValidatorTest.class);
+    static Logger LOG = LoggerFactory.getLogger(ChallengeValidatorDNSTest.class);
 
     String resolverHost = "localhost";
 
@@ -84,10 +84,4 @@ public class ChallengeValidatorTest {
         }
     }
 
-    public void testRetrieveChallengeHttp() {
-
-    }
-
-    public void testRetrieveChallengeALPN() {
-    }
 }

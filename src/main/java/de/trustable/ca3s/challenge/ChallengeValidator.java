@@ -218,18 +218,25 @@ public class ChallengeValidator {
                 return actualContent;
 
             } catch(UnknownHostException uhe) {
-//            } catch(RestClientException uhe) {
-                String msg = "unable to resolve hostname: '" + host + "' checking HTTP-01 challenge.";
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading challenge response", uhe);
+                }
+                String msg = "unable to resolve hostname: '" + host + ":"+port+ "' checking HTTP-01 challenge.";
                 LOG.info(msg);
                 throw new ChallengeUnknownHostException(msg);
             } catch(SocketTimeoutException | ConnectTimeoutException ste) {
-                String msg = "timeout connecting to "+host+":"+port+ "  checking HTTP-01 challenge!";
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading challenge response", ste);
+                }
+                String msg = "timeout connecting to '"+host+":"+port+ "'  checking HTTP-01 challenge!";
                 LOG.info(msg);
                 // go on trying other ports
             } catch(IOException ioe) {
-                String msg = "problem reading HTTP-01 challenge response on "+host+":"+port+" : " + ioe.getMessage();
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading challenge response", ioe);
+                }
+                String msg = "problem reading HTTP-01 challenge response on '"+host+":"+port+"' : " + ioe.getMessage();
                 LOG.info(msg);
-                LOG.debug("exception occurred reading challenge response", ioe);
                 // go on trying other ports
             }
         }
@@ -286,21 +293,27 @@ public class ChallengeValidator {
         for( int port: httpsPorts) {
 
             try {
-
                 return validateALPNChallenge( host, trustAllCerts, port);
 
             } catch(UnknownHostException uhe) {
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading challenge response", uhe);
+                }
                 String msg = "unable to resolve hostname: '" + host + "'";
                 LOG.info(msg);
                 throw new ChallengeUnknownHostException(msg);
             } catch(IOException ioe) {
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading challenge response", ioe);
+                }
                 String msg = "problem reading alpn certificate on "+host+":"+port+" : " + ioe.getMessage();
                 LOG.info(msg);
-                LOG.debug("exception occurred reading challenge response", ioe);
             } catch (CertificateException ce) {
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("exception occurred reading alpn challenge response certificate", ce);
+                }
                 String msg = "problem reading alpn challenge response in certificate provided by "+host+":"+port+" : " + ce.getMessage();
                 LOG.info(msg);
-                LOG.debug("exception occurred reading alpn challenge response certificate", ce);
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
                 throw new GeneralSecurityException(e);
             }
