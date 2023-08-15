@@ -6,7 +6,7 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <name>acmeChallengeHandler</name>
     <description>ACME Challenge handler libary</description>
@@ -44,7 +44,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <bouncyCastle.version>1.72</bouncyCastle.version>
+        <bouncyCastle.version>1.76</bouncyCastle.version>
         <dnsjava.version>3.5.2</dnsjava.version>
         <httpclient.version>4.5.14</httpclient.version>
 
