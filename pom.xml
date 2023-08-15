@@ -6,7 +6,7 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <name>acmeChallengeHandler</name>
     <description>ACME Challenge handler libary</description>
@@ -50,7 +50,7 @@
 
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-checkstyle.version>3.2.2</maven-checkstyle.version>
-        <checkstyle.version>10.11.0</checkstyle.version>
+        <checkstyle.version>10.12.2</checkstyle.version>
         <spring-nohttp-checkstyle.version>0.0.4.RELEASE</spring-nohttp-checkstyle.version>
 
         <slf4j.version>2.0.7</slf4j.version>
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -123,19 +123,6 @@
     </dependencies>
     <build>
         <plugins>
-            <!-- plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>2.0.0</version>
-                <executions>
-                    <execution>
-                        <id>download-licenses</id>
-                        <goals>
-                            <goal>download-licenses</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -312,6 +299,20 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
+                        <version>2.2.0</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>2.7.9</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>makeAggregateBom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
