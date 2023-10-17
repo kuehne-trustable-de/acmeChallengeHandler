@@ -7,10 +7,10 @@ import de.trustable.ca3s.challenge.exception.ChallengeUnknownHostException;
 import de.trustable.ca3s.challenge.exception.ChallengeValidationFailedException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -33,6 +33,7 @@ import java.security.cert.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.xbill.DNS.Name.*;
 import static org.xbill.DNS.Type.TXT;
@@ -53,6 +54,7 @@ public class ChallengeValidator {
     public static final String ACME_TLS_1_PROTOCOL = "acme-tls/1";
 
     final private int[] ports;
+    final private int maxRedirects;
     final private int[] httpsPorts;
     final private long timeoutMilliSec;
 
@@ -62,40 +64,58 @@ public class ChallengeValidator {
     public ChallengeValidator(final String resolverHost,
                               int resolverPort,
                               long timeoutMilliSec,
-                              int[] ports, int[] httpsPorts) {
+                              int[] ports,
+                              int maxRedirects,
+                              int[] httpsPorts) {
 
         if(resolverHost == null || resolverHost.isEmpty()){
-            dnsActive = false;
+            this.dnsActive = false;
             this.dnsResolver = null;
+            LOG.info("DNS resolver not configured");
         }else{
             try {
                 this.dnsResolver = new SimpleResolver(resolverHost);
                 this.dnsResolver.setPort(resolverPort);
                 LOG.info("Applying default DNS resolver {}", this.dnsResolver.getAddress());
-                dnsActive = true;
+                this.dnsActive = true;
             } catch (UnknownHostException e) {
-                dnsActive = false;
-                LOG.info("Intialization of DNS resolver at '" + resolverHost + "':"+resolverPort+" failed!");
+                this.dnsActive = false;
+                LOG.info("Initialization of DNS resolver at '" + resolverHost + "':"+resolverPort+" failed!");
             }
         }
 
         this.timeoutMilliSec = timeoutMilliSec;
+        LOG.info("timeoutMilliSec '{}'", timeoutMilliSec );
+
+        this.maxRedirects = maxRedirects;
+        LOG.info("maxRedirects '{}'", maxRedirects );
 
         if( ports == null || ports.length == 0){
             this.ports = new int[]{80, 5544, 8800};
+            LOG.info("Using default HTTP-01 challenge ports  '{}'", delimitedArray(this.ports));
         }else {
             this.ports = ports;
+            LOG.info("Using provided HTTP-01 challenge ports  '{}'", delimitedArray(this.ports) );
         }
 
         if( httpsPorts == null || httpsPorts.length == 0){
             this.httpsPorts = new int[]{443, 8443};
+            LOG.info("Using default ALPN ports  '{}'", delimitedArray(this.httpsPorts) );
         }else {
             this.httpsPorts = httpsPorts;
+            LOG.info("Using provided ALPN ports  '{}'", delimitedArray(this.httpsPorts) );
         }
     }
 
+    private String delimitedArray(final int[] ports){
+        return Arrays.stream(ports).mapToObj(String::valueOf).collect(Collectors.joining(", "));
+    }
 
     public Collection<String> retrieveChallengeDNS(final String identifierValue) throws ChallengeDNSIdentifierException, ChallengeDNSException {
+
+        if(!this.dnsActive){
+            throw new ChallengeDNSException("DNS challenge not configured / not supported");
+        }
 
         final Name nameToLookup;
         try {
@@ -153,69 +173,59 @@ public class ChallengeValidator {
 
         for( int port: ports) {
 
-            try {
+            try (CloseableHttpClient instance = HttpClientBuilder.create()
+                    .setRedirectStrategy(new LaxRedirectStrategy())
+                    .build()){
+
                 URL url = new URL("http", host, port, fileNamePath);
                 LOG.debug("Opening connection to  : " + url);
 
-                HttpClient instance = HttpClientBuilder.create()
-                    .setRedirectStrategy(new LaxRedirectStrategy())
-                    .build();
-
-                HttpGet request = new HttpGet(url.toString());
-                request.addHeader(HttpHeaders.USER_AGENT, "CA3S_ACME");
-
                 RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectionRequestTimeout((int)timeoutMilliSec)
-                    .setConnectTimeout((int)timeoutMilliSec)
-                    .setSocketTimeout((int)timeoutMilliSec)
-                    .build();
+                        .setConnectionRequestTimeout((int)timeoutMilliSec)
+                        .setConnectTimeout((int)timeoutMilliSec)
+                        .setSocketTimeout((int)timeoutMilliSec)
+                        .build();
 
-                request.setConfig(requestConfig);
-                HttpResponse response = instance.execute(request);
-                int responseCode = response.getStatusLine().getStatusCode();
+                String currentUrl = url.toString();
+                int redirectCounter = this.maxRedirects;
+                do {
+                    HttpGet request = new HttpGet(currentUrl);
+                    request.addHeader(HttpHeaders.USER_AGENT, "CA3S_ACME");
+                    request.setConfig(requestConfig);
 
-/*
-                SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-                simpleClientHttpRequestFactory.setConnectTimeout((int) timeoutMilliSec);
-                simpleClientHttpRequestFactory.setReadTimeout((int) timeoutMilliSec);
-                RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+                     HttpResponse response = instance.execute(request);
+                     int responseCode = response.getStatusLine().getStatusCode();
 
-                ResponseEntity<String> challengeResponse = restTemplate.getForEntity(url.toString(), String.class);
-*/
+                     LOG.debug("\nSending 'GET' request to URL : " + currentUrl);
+                     LOG.debug("Response Code : " + responseCode);
 
-/*
-				HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    if( (responseCode >= 300 && responseCode < 400) && (response.getHeaders(HttpHeaders.LOCATION).length > 0) ){
 
-				// Just wait for two seconds
-				con.setConnectTimeout((int) timeoutMilliSec);
-				con.setReadTimeout((int) timeoutMilliSec);
+                        redirectCounter--;
+                        if( redirectCounter == 0){
+                            LOG.info("Response code '{}', but max number of redirects reached, failing", responseCode);
+                            continue;
+                        }
 
-				// optional default is GET
-				con.setRequestMethod("GET");
+                        String redirectUrl = response.getFirstHeader(HttpHeaders.LOCATION).getValue();
+                        if( !redirectUrl.isEmpty()){
+                            currentUrl = redirectUrl;
+                            LOG.info("Location header present, forwarding to {}. Redirects left {}", redirectUrl, redirectCounter);
+                            continue;
+                        }else{
+                            LOG.info("Response code '{}', but no valid location header, failing", responseCode);
+                        }
+                    }
 
-				// add request header
-				con.setRequestProperty("User-Agent", "CA3S_ACME");
+                    if (responseCode != 200) {
+                        String msg = "read challenge responded with unexpected code : " + responseCode;
+                        LOG.info(msg);
+                        continue;
+                    }
 
-				int responseCode = con.getResponseCode();
- */
+                    return readChallengeResponse(response.getEntity().getContent());
 
-//                int responseCode = challengeResponse.getStatusCodeValue();
-
-                LOG.debug("\nSending 'GET' request to URL : " + url);
-                LOG.debug("Response Code : " + responseCode);
-
-                if( responseCode != 200) {
-                    String msg = "read challenge responded with unexpected code : " + responseCode;
-                    LOG.info(msg);
-                    continue;
-                }
-
-                String actualContent = readChallengeResponse(response.getEntity().getContent());
-
-//                String actualContent = readChallengeResponse(con);
-//                String actualContent = challengeResponse.getBody();
-
-                return actualContent;
+                }while(redirectCounter > 0);
 
             } catch(UnknownHostException uhe) {
                 if( LOG.isDebugEnabled()) {
@@ -244,14 +254,10 @@ public class ChallengeValidator {
         throw new ChallengeValidationFailedException();
     }
 
-    private String readChallengeResponse(HttpURLConnection con) throws IOException {
-        return readChallengeResponse(con.getInputStream());
-    }
-
     private String readChallengeResponse(InputStream is) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
 
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);

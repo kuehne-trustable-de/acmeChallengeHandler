@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.UnknownHostException;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,12 +40,14 @@ public class ChallengeValidatorDNSTest {
     }
 
     @Test
-    public void testRetrieveChallengeDNSHappyPath() throws UnknownHostException, ChallengeDNSException, ChallengeDNSIdentifierException {
+    public void testRetrieveChallengeDNSHappyPath() throws ChallengeDNSException, ChallengeDNSIdentifierException {
 
         ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
                 dnsPort,
                 500,
-                null, null);
+                null,
+                0,
+                null);
 
         Collection<String> values = challengeValidator.retrieveChallengeDNS("FooBArBaz1234");
 
@@ -55,12 +56,14 @@ public class ChallengeValidatorDNSTest {
     }
 
     @Test
-    public void testRetrieveChallengeNoDNSEntry() throws UnknownHostException, ChallengeDNSException, ChallengeDNSIdentifierException {
+    public void testRetrieveChallengeNoDNSEntry() throws ChallengeDNSException, ChallengeDNSIdentifierException {
 
         ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
                 dnsPort,
                 500,
-                null, null);
+                null,
+                0,
+                null);
 
         Collection<String> values = challengeValidator.retrieveChallengeDNS("Unknown.Entry");
 
@@ -75,7 +78,8 @@ public class ChallengeValidatorDNSTest {
         ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
                 serverSocket.getLocalPort(),
                 500,
-                null, null);
+                null, 0,
+                null);
 
         try {
             Collection<String> values = challengeValidator.retrieveChallengeDNS("Unknown.Entry");

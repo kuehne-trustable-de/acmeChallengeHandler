@@ -6,7 +6,7 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 
     <name>acmeChallengeHandler</name>
     <description>ACME Challenge handler libary</description>
@@ -50,7 +50,7 @@
 
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-checkstyle.version>3.2.2</maven-checkstyle.version>
-        <checkstyle.version>10.12.2</checkstyle.version>
+        <checkstyle.version>3.3.0</checkstyle.version>
         <spring-nohttp-checkstyle.version>0.0.4.RELEASE</spring-nohttp-checkstyle.version>
 
         <slf4j.version>2.0.7</slf4j.version>
@@ -64,7 +64,7 @@
         <license.organizationName>Andreas Kuehne</license.organizationName>
 
         <dependencyCheck.version>8.2.1</dependencyCheck.version>
-        <dependencyCheck.skip>true</dependencyCheck.skip>
+        <dependencyCheck.skip>false</dependencyCheck.skip>
 
     </properties>
 
@@ -254,32 +254,41 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${maven-checkstyle.version}</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>com.puppycrawl.tools</groupId>
-                                <artifactId>checkstyle</artifactId>
-                                <version>${checkstyle.version}</version>
-                            </dependency>
-                            <!--dependency>
-                                <groupId>io.spring.nohttp</groupId>
-                                <artifactId>nohttp-checkstyle</artifactId>
-                                <version>${spring-nohttp-checkstyle.version}</version>
-                            </dependency-->
-                        </dependencies>
-                        <configuration>
-                            <configLocation>checkstyle.xml</configLocation>
-                            <includes>pom.xml,README.md</includes>
-                            <excludes>.git/**/*,target/**/*,node_modules/**/*,node/**/*</excludes>
-                            <sourceDirectories>./</sourceDirectories>
-                        </configuration>
+                        <version>${checkstyle.version}</version>
                         <executions>
                             <execution>
+                                <id>verify-style</id>
+                                <phase>process-classes</phase>
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <logViolationsToConsole>true</logViolationsToConsole>
+                            <checkstyleRules>
+                                <module name="Checker">
+
+                                    <!-- Checks for Size Violations.                    -->
+                                    <!-- See http://checkstyle.sf.net/config_sizes.html -->
+                                    <module name="FileLength">
+                                        <property name="max" value="3500" />
+                                        <property name="fileExtensions" value="java"/>
+                                    </module>
+
+                                    <!-- Checks for whitespace                               -->
+                                    <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+                                    <module name="FileTabCharacter"/>
+
+                                    <module name="TreeWalker">
+                                        <module name="StaticVariableName"/>
+                                        <module name="TypeName">
+                                            <property name="format" value="^_?[A-Z][a-zA-Z0-9]*$"/>
+                                        </module>
+                                    </module>
+                                </module>
+                            </checkstyleRules>
+                        </configuration>
                     </plugin>
 
                 </plugins>
