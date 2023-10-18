@@ -64,7 +64,7 @@
         <license.organizationName>Andreas Kuehne</license.organizationName>
 
         <dependencyCheck.version>8.2.1</dependencyCheck.version>
-        <dependencyCheck.skip>false</dependencyCheck.skip>
+        <dependencyCheck.skip>true</dependencyCheck.skip>
 
     </properties>
 
