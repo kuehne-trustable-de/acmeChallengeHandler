@@ -63,7 +63,7 @@
         <license.inceptionYear>2016</license.inceptionYear>
         <license.organizationName>Andreas Kuehne</license.organizationName>
 
-        <dependencyCheck.version>12.2.1</dependencyCheck.version>
+        <dependencyCheck.version>12.2.2</dependencyCheck.version>
         <dependencyCheck.skip>true</dependencyCheck.skip>
 
     </properties>
