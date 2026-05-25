@@ -171,7 +171,6 @@
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
-                            <skip>true</skip>
                         </configuration>
                     </execution>
                 </executions>
@@ -192,36 +191,6 @@
         </plugins>
     </build>
 
-    <!--repositories>
-        <repository>
-            <id>trustable.eu</id>
-            <url>https://trustable.eu/artifactory/ca3s</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-
-    </repositories-->
-
-    <!--distributionManagement>
-        <repository>
-            <uniqueVersion>false</uniqueVersion>
-            <id>trustable.eu</id>
-            <name>trustable Repository</name>
-            <url>https://trustable.eu/artifactory/ca3s</url>
-            <layout>default</layout>
-        </repository>
-        <snapshotRepository>
-            <uniqueVersion>true</uniqueVersion>
-            <id>Snap_trustable.eu</id>
-            <name>trustable Snapshots</name>
-            <url>https://trustable.eu/artifactory/ca3s</url>
-            <layout>default</layout>
-        </snapshotRepository>
-    </distributionManagement-->
 
     <profiles>
         <profile>
