@@ -57,8 +57,6 @@
         <logback.version>1.5.32</logback.version>
         <wiremock.version>3.0.3</wiremock.version>
 
-        <junit.version>4.13.2</junit.version>
-
         <license.licenseName>apache_v2</license.licenseName>
         <license.inceptionYear>2016</license.inceptionYear>
         <license.organizationName>Andreas Kuehne</license.organizationName>
@@ -104,12 +102,6 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>6.1.0</version>
@@ -148,7 +140,6 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>${dependencyCheck.version}</version>
                 <configuration>
-                    <cveValidForHours>12</cveValidForHours>
                     <failBuildOnCVSS>4</failBuildOnCVSS>
                     <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
                     <format>HTML</format>
