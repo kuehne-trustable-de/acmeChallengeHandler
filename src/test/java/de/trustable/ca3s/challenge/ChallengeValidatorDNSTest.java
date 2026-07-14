@@ -29,6 +29,8 @@ public class ChallengeValidatorDNSTest {
     public final static String txtRecord2 = "0101010101010101";
     public final static String txtRecord3 = "_-_-_-_-_-_-_-_-";
 
+    public final static String txtRecord4 = "persist1234567890";
+
     @BeforeAll
     static void setup() throws IOException {
         ServerSocket serverSocket = new ServerSocket(0);
@@ -87,5 +89,38 @@ public class ChallengeValidatorDNSTest {
             assertTrue( ex.getMessage().startsWith("Problem accessing DNS resolver:"));
         }
     }
+
+
+    @Test
+    public void testRetrieveChallengeDNSPersistHappyPath() throws ChallengeDNSException, ChallengeDNSIdentifierException {
+
+        ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
+                dnsPort,
+                500,
+                null,
+                0,
+                null);
+
+        Collection<String> values = challengeValidator.retrieveChallengeDNSPersist("FooBArBaz1234");
+
+        assertEquals(1, values.size());
+        assertTrue(values.contains(txtRecord4));
+    }
+
+    @Test
+    public void testRetrieveChallengeNoDNSPersistEntry() throws ChallengeDNSException, ChallengeDNSIdentifierException {
+
+        ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
+                dnsPort,
+                500,
+                null,
+                0,
+                null);
+
+        Collection<String> values = challengeValidator.retrieveChallengeDNSPersist("Unknown.Entry");
+
+        assertEquals(0, values.size());
+    }
+
 
 }

@@ -42,8 +42,14 @@ public class ChallengeValidator {
 
     transient Logger LOG = LoggerFactory.getLogger(ChallengeValidator.class);
 
-    public static final String ACME_CHALLENGE_PREFIX_STRING = "_acme-challenge";
-    public static final Name ACME_CHALLENGE_PREFIX = fromConstantString(ACME_CHALLENGE_PREFIX_STRING);
+    public static final String ACME_DNS_CHALLENGE_PREFIX_STRING = "_acme-challenge";
+    public static final Name ACME_DNS_CHALLENGE_PREFIX = fromConstantString(ACME_DNS_CHALLENGE_PREFIX_STRING);
+
+    public static final String ACME_DNS_PERSIST_CHALLENGE_PREFIX_STRING = "_validation-persist";
+    public static final Name ACME_DNS_PERSIST_CHALLENGE_PREFIX = fromConstantString(ACME_DNS_PERSIST_CHALLENGE_PREFIX_STRING);
+
+
+
 
     /**
      * OID of the {@code acmeValidation} extension.
@@ -119,13 +125,39 @@ public class ChallengeValidator {
         try {
             final Name nameOfIdentifier = fromString(identifierValue, root);
             LOG.info("DNS TXT lookup for identifier '" + identifierValue + "'");
-            nameToLookup = concatenate(ACME_CHALLENGE_PREFIX, nameOfIdentifier);
+            nameToLookup = concatenate(ACME_DNS_CHALLENGE_PREFIX, nameOfIdentifier);
 
         } catch (TextParseException | NameTooLongException e) {
             String msg = "problem while DNS lookup of identifier '" + identifierValue + "'";
             throw new ChallengeDNSIdentifierException(msg);
         }
 
+        return getDNSStringContent(nameToLookup);
+
+    }
+
+    public Collection<String> retrieveChallengeDNSPersist(final String identifierValue) throws ChallengeDNSIdentifierException, ChallengeDNSException {
+
+        if(!this.dnsActive){
+            throw new ChallengeDNSException("DNS challenge not configured / not supported");
+        }
+
+        final Name nameToLookup;
+        try {
+            final Name nameOfIdentifier = fromString(identifierValue, root);
+            LOG.info("DNS persist TXT lookup for identifier '" + identifierValue + "'");
+            nameToLookup = concatenate(ACME_DNS_PERSIST_CHALLENGE_PREFIX, nameOfIdentifier);
+
+        } catch (TextParseException | NameTooLongException e) {
+            String msg = "problem while DNS persist lookup of identifier '" + identifierValue + "'";
+            throw new ChallengeDNSIdentifierException(msg);
+        }
+
+        return getDNSStringContent(nameToLookup);
+
+    }
+
+    private Collection<String> getDNSStringContent(Name nameToLookup) throws ChallengeDNSException {
         final Lookup lookupOperation = new Lookup(nameToLookup, TXT);
         lookupOperation.setResolver(dnsResolver);
         lookupOperation.setCache(null);
@@ -140,7 +172,7 @@ public class ChallengeValidator {
                 break;
 
             case Lookup.TYPE_NOT_FOUND:
-                return (Collection<String>)Collections.EMPTY_LIST;
+                return (Collection<String>) Collections.EMPTY_LIST;
 
             case Lookup.HOST_NOT_FOUND:
                 throw new ChallengeDNSException("Problem accessing DNS resolver: HOST_NOT_FOUND");
@@ -161,7 +193,6 @@ public class ChallengeValidator {
         LOG.info("DNS lookup yields: {} (took {})", Arrays.toString(lookupResult), lookupDuration);
 
         return extractTokenFrom(lookupResult);
-
     }
 
 

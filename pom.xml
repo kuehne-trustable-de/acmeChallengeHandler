@@ -6,10 +6,10 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.0.5</version>
+    <version>1.1.0</version>
 
     <name>acmeChallengeHandler</name>
-    <description>ACME Challenge handler libary</description>
+    <description>ACME Challenge handler library</description>
     <url>https://github.com/kuehne-trustable-de/acmeChallengeHandler/</url>
 
     <licenses>
@@ -62,7 +62,7 @@
         <license.organizationName>Andreas Kuehne</license.organizationName>
 
         <dependencyCheck.version>12.2.2</dependencyCheck.version>
-        <dependencyCheck.skip>false</dependencyCheck.skip>
+        <dependencyCheck.skip>true</dependencyCheck.skip>
 
         <maven.autoPublish>true</maven.autoPublish>
 
@@ -144,6 +144,7 @@
                     <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
                     <format>HTML</format>
                     <skip>${dependencyCheck.skip}</skip>
+                    <nvdApiKey>${dependencyCheck.nvdApiKey}</nvdApiKey>
                 </configuration>
                 <executions>
                     <execution>

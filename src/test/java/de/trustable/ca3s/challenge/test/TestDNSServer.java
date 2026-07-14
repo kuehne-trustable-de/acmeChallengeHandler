@@ -13,11 +13,10 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
-import static de.trustable.ca3s.challenge.ChallengeValidator.ACME_CHALLENGE_PREFIX;
-import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord1;
-import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord2;
-import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.txtRecord3;
+import static de.trustable.ca3s.challenge.ChallengeValidator.ACME_DNS_CHALLENGE_PREFIX;
+import static de.trustable.ca3s.challenge.ChallengeValidator.ACME_DNS_PERSIST_CHALLENGE_PREFIX;
 
+import static de.trustable.ca3s.challenge.ChallengeValidatorDNSTest.*;
 import static org.xbill.DNS.Name.*;
 
 
@@ -80,10 +79,13 @@ public class TestDNSServer {
         // Add answers as needed
         response.addRecord(Record.fromString(Name.root, Type.A, DClass.IN, 86400, "1.2.3.4", Name.root), Section.ANSWER);
 
-        final Name nameOfIdentifier = concatenate(ACME_CHALLENGE_PREFIX, fromString("FooBArBaz1234", root));
+        final Name nameOfIdentifier = concatenate(ACME_DNS_CHALLENGE_PREFIX, fromString("FooBArBaz1234", root));
         response.addRecord(Record.fromString(nameOfIdentifier, Type.TXT, DClass.IN, 86400, txtRecord1, Name.root), Section.ANSWER);
         response.addRecord(Record.fromString(nameOfIdentifier, Type.TXT, DClass.IN, 86400, txtRecord2, Name.root), Section.ANSWER);
         response.addRecord(Record.fromString(nameOfIdentifier, Type.TXT, DClass.IN, 86400, txtRecord3, Name.root), Section.ANSWER);
+
+        final Name nameOfPersistIdentifier = concatenate(ACME_DNS_PERSIST_CHALLENGE_PREFIX, fromString("FooBArBaz1234", root));
+        response.addRecord(Record.fromString(nameOfPersistIdentifier, Type.TXT, DClass.IN, 86400, txtRecord4, Name.root), Section.ANSWER);
 
         // Make it timeout, comment this section if a success response is needed
 /*
