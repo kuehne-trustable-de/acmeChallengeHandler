@@ -46,7 +46,7 @@
 
         <bouncyCastle.version>1.85</bouncyCastle.version>
         <dnsjava.version>3.6.5</dnsjava.version>
-        <httpclient.version>4.5.14</httpclient.version>
+        <httpclient.version>5.6.1</httpclient.version>
 
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
         <maven-checkstyle.version>3.2.2</maven-checkstyle.version>
@@ -57,6 +57,8 @@
         <logback.version>1.5.38</logback.version>
         <wiremock.version>3.13.2</wiremock.version>
 
+        <junit.version>4.13.2</junit.version>
+
         <license.licenseName>apache_v2</license.licenseName>
         <license.inceptionYear>2016</license.inceptionYear>
         <license.organizationName>Andreas Kuehne</license.organizationName>
@@ -64,7 +66,7 @@
         <dependencyCheck.version>12.2.2</dependencyCheck.version>
         <dependencyCheck.skip>true</dependencyCheck.skip>
 
-        <maven.autoPublish>true</maven.autoPublish>
+        <maven.autoPublish>false</maven.autoPublish>
 
     </properties>
 
@@ -85,8 +87,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
             <version>${httpclient.version}</version>
         </dependency>
         <dependency>

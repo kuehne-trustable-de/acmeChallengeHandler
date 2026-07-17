@@ -4,14 +4,16 @@ import de.trustable.ca3s.challenge.exception.ChallengeDNSException;
 import de.trustable.ca3s.challenge.exception.ChallengeDNSIdentifierException;
 import de.trustable.ca3s.challenge.exception.ChallengeUnknownHostException;
 import de.trustable.ca3s.challenge.exception.ChallengeValidationFailedException;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.LaxRedirectStrategy;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.util.Timeout;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.slf4j.Logger;
@@ -200,20 +202,30 @@ public class ChallengeValidator {
 
         String fileNamePath = "/.well-known/acme-challenge/" + token;
 
+        ConnectionConfig connConfig = ConnectionConfig.custom()
+                .setConnectTimeout(timeoutMilliSec, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .setSocketTimeout((int)timeoutMilliSec, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .build();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(2000L))
+                .build();
+
+        BasicHttpClientConnectionManager cm = new BasicHttpClientConnectionManager();
+        cm.setConnectionConfig(connConfig);
+
+
+        StringBuilder failureInfos = new StringBuilder();
         for( int port: ports) {
 
-            try (CloseableHttpClient instance = HttpClientBuilder.create()
+            try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+                    .setDefaultRequestConfig(requestConfig)
+                    .setConnectionManager(cm)
                     .setRedirectStrategy(new LaxRedirectStrategy())
                     .build()){
 
                 URL url = new URL("http", host, port, fileNamePath);
                 LOG.debug("Opening connection to  : " + url);
-
-                RequestConfig requestConfig = RequestConfig.custom()
-                        .setConnectionRequestTimeout((int)timeoutMilliSec)
-                        .setConnectTimeout((int)timeoutMilliSec)
-                        .setSocketTimeout((int)timeoutMilliSec)
-                        .build();
 
                 String currentUrl = url.toString();
                 int redirectCounter = this.maxRedirects;
@@ -222,37 +234,47 @@ public class ChallengeValidator {
                     request.addHeader(HttpHeaders.USER_AGENT, "CA3S_ACME");
                     request.setConfig(requestConfig);
 
-                     HttpResponse response = instance.execute(request);
-                     int responseCode = response.getStatusLine().getStatusCode();
+                    org.apache.hc.core5.http.ClassicHttpResponse classicResponse = httpClient.execute(request);
+
+                    int responseCode = classicResponse.getCode();
 
                      LOG.debug("\nSending 'GET' request to URL : " + currentUrl);
                      LOG.debug("Response Code : " + responseCode);
 
-                    if( (responseCode >= 300 && responseCode < 400) && (response.getHeaders(HttpHeaders.LOCATION).length > 0) ){
+                    if( (responseCode >= 300 && responseCode < 400) && (classicResponse.getHeaders(HttpHeaders.LOCATION).length > 0) ){
 
                         redirectCounter--;
                         if( redirectCounter == 0){
-                            LOG.info("Response code '{}', but max number of redirects reached, failing", responseCode);
+                            String msg = ("Response code '"+responseCode+"', but max number of redirects reached, failing");
+                            LOG.info(msg);
+                            failureInfos.append(msg).append("\n");
                             continue;
                         }
 
-                        String redirectUrl = response.getFirstHeader(HttpHeaders.LOCATION).getValue();
+                        String redirectUrl = classicResponse.getFirstHeader(HttpHeaders.LOCATION).getValue();
                         if( !redirectUrl.isEmpty()){
                             currentUrl = redirectUrl;
                             LOG.info("Location header present, forwarding to {}. Redirects left {}", redirectUrl, redirectCounter);
                             continue;
                         }else{
-                            LOG.info("Response code '{}', but no valid location header, failing", responseCode);
+                            String msg = "Response code '"+responseCode+"', but no valid location header, failing";
+                            LOG.info(msg);
+                            failureInfos.append(msg).append("\n");
+
                         }
                     }
 
                     if (responseCode != 200) {
-                        String msg = "read challenge responded with unexpected code : " + responseCode;
+                        String msg = "read challenge responded with unexpected code : " + responseCode + " for hostname: '" + host + ":"+port+ "' checking HTTP-01 challenge.";
                         LOG.info(msg);
-                        continue;
+                        failureInfos.append(msg).append("\n");
+                        break;
                     }
 
-                    return readChallengeResponse(response.getEntity().getContent());
+                    String responseString = EntityUtils.toString(classicResponse.getEntity(), "UTF-8");
+                    System.out.println( "+++++++++++++++++++" + responseString);
+
+                    return readChallengeResponse(responseString);
 
                 }while(redirectCounter > 0);
 
@@ -262,13 +284,15 @@ public class ChallengeValidator {
                 }
                 String msg = "unable to resolve hostname: '" + host + ":"+port+ "' checking HTTP-01 challenge.";
                 LOG.info(msg);
-                throw new ChallengeUnknownHostException(msg);
-            } catch(SocketTimeoutException | ConnectTimeoutException ste) {
+                failureInfos.append(msg).append("\n");
+                throw new ChallengeUnknownHostException(failureInfos.toString());
+            } catch(SocketTimeoutException ste) {
                 if( LOG.isDebugEnabled()) {
                     LOG.debug("exception occurred reading challenge response", ste);
                 }
                 String msg = "timeout connecting to '"+host+":"+port+ "'  checking HTTP-01 challenge!";
                 LOG.info(msg);
+                failureInfos.append(msg).append("\n");
                 // go on trying other ports
             } catch(IOException ioe) {
                 if( LOG.isDebugEnabled()) {
@@ -276,36 +300,34 @@ public class ChallengeValidator {
                 }
                 String msg = "problem reading HTTP-01 challenge response on '"+host+":"+port+"' : " + ioe.getMessage();
                 LOG.info(msg);
+                failureInfos.append(msg).append("\n");
+                // go on trying other ports
+
+            } catch(Throwable th) {
+                if( LOG.isDebugEnabled()) {
+                    LOG.debug("unexpected exception occurred reading challenge response", th);
+                }
+                String msg = "unexpected problem reading HTTP-01 challenge response on '"+host+":"+port+"' : " + th.getMessage();
+                LOG.info(msg);
+                failureInfos.append(msg).append("\n");
                 // go on trying other ports
             }
         }
 
-        throw new ChallengeValidationFailedException();
+        throw new ChallengeValidationFailedException(failureInfos.toString());
     }
 
-    private String readChallengeResponse(InputStream is) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(is));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
+    private String readChallengeResponse(String challengeContent) throws IOException {
 
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-            if (response.length() > 1000) {
-                LOG.debug("limiting read of challenge response to 1000 characters.");
-                break;
-            }
-        }
-        in.close();
+        String trimmedContent = challengeContent.trim();
 
-        String actualContent = response.toString().trim();
-
-        if( actualContent.length() > 100){
-            LOG.debug("read challenge response (truncated): " + actualContent.substring(0,100) + " ...");
+        if( trimmedContent.length() > 100){
+            LOG.debug("read challenge response (truncated): " + trimmedContent.substring(0,100) + " ...");
         }else {
-            LOG.debug("read challenge response: " + actualContent);
+            LOG.debug("read challenge response: " + trimmedContent);
         }
 
-        return actualContent;
+        return trimmedContent;
     }
 
 
@@ -325,6 +347,7 @@ public class ChallengeValidator {
             }
         } };
 
+        StringBuilder failureInfos = new StringBuilder();
         for( int port: httpsPorts) {
 
             try {
@@ -336,25 +359,28 @@ public class ChallengeValidator {
                 }
                 String msg = "unable to resolve hostname: '" + host + "'";
                 LOG.info(msg);
-                throw new ChallengeUnknownHostException(msg);
+                failureInfos.append(msg).append("\n");
+                throw new ChallengeUnknownHostException(failureInfos.toString());
             } catch(IOException ioe) {
                 if( LOG.isDebugEnabled()) {
                     LOG.debug("exception occurred reading challenge response", ioe);
                 }
                 String msg = "problem reading alpn certificate on "+host+":"+port+" : " + ioe.getMessage();
                 LOG.info(msg);
+                failureInfos.append(msg).append("\n");
             } catch (CertificateException ce) {
                 if( LOG.isDebugEnabled()) {
                     LOG.debug("exception occurred reading alpn challenge response certificate", ce);
                 }
                 String msg = "problem reading alpn challenge response in certificate provided by "+host+":"+port+" : " + ce.getMessage();
                 LOG.info(msg);
+                failureInfos.append(msg).append("\n");
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
                 throw new GeneralSecurityException(e);
             }
         }
 
-        throw new ChallengeValidationFailedException();
+        throw new ChallengeValidationFailedException(failureInfos.toString());
     }
 
     private String validateALPNChallenge(String host, TrustManager[] trustAllCerts, int port) throws IOException, CertificateException, NoSuchAlgorithmException, KeyManagementException {
