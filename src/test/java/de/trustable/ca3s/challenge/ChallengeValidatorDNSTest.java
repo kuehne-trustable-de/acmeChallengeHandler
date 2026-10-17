@@ -7,10 +7,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.TXTRecord;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +33,23 @@ public class ChallengeValidatorDNSTest {
     public final static String txtRecord3 = "_-_-_-_-_-_-_-_-";
 
     public final static String txtRecord4 = "persist1234567890";
+
+    public static final String SPEC_SAMPLE_RECORD_MOD ="Authority.example;    foo=bar;;;" +
+            " accounturi=https://ca.example/acct/123;" +
+            " accounturi=https://ca.example/acct/124;" +
+            " policy=wildcard; \n\n" +
+            "     persistUntil=1721952000";
+
+    public static final String SPEC_ALL_QUOTE_RECORD ="\"authority.example;\"" +
+            " \"accounturi=https://ca.example/acct/123;\"" +
+            " \"policy=wildcard;\"" +
+            " \"persistUntil=1721952000\"";
+
+    public static final String SPEC_SINGLE_QUOTE_RECORD ="\"authority.example;" +
+            " accounturi=https://ca.example/acct/123;" +
+            " policy=wildcard;" +
+            " persistUntil=1721952000\"";
+
 
     @BeforeAll
     static void setup() throws IOException {
@@ -122,5 +142,34 @@ public class ChallengeValidatorDNSTest {
         assertEquals(0, values.size());
     }
 
+
+    @Test
+    public void testExtractTokenFrom() {
+
+        ChallengeValidator challengeValidator = new ChallengeValidator(resolverHost,
+                dnsPort,
+                500,
+                null,
+                0,
+                null);
+
+        List<String> tokenList = challengeValidator.extractTokenFrom(getTxtRecords(SPEC_SAMPLE_RECORD_MOD));
+        assertEquals(1, tokenList.size());
+
+        tokenList = challengeValidator.extractTokenFrom(getTxtRecords(SPEC_SINGLE_QUOTE_RECORD));
+        assertEquals(1, tokenList.size());
+        tokenList = challengeValidator.extractTokenFrom(getTxtRecords(SPEC_ALL_QUOTE_RECORD));
+        assertEquals(1, tokenList.size());
+
+
+
+    }
+
+    private static TXTRecord[] getTxtRecords(String recordAsString) {
+        TXTRecord[] lookupResult = new TXTRecord[1];
+        lookupResult[0] = new TXTRecord(Name.fromConstantString("_acme-challenge.FooBArBaz1234."), 1, 1,
+                recordAsString);
+        return lookupResult;
+    }
 
 }

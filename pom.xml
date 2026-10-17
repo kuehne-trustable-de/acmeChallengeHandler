@@ -6,7 +6,7 @@
 
     <groupId>de.trustable.ca3s</groupId>
     <artifactId>acmeChallengeHandler</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 
     <name>acmeChallengeHandler</name>
     <description>ACME Challenge handler library</description>
@@ -44,7 +44,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <bouncyCastle.version>1.85</bouncyCastle.version>
+        <bouncyCastle.version>1.86</bouncyCastle.version>
         <dnsjava.version>3.6.5</dnsjava.version>
         <httpclient.version>5.6.4</httpclient.version>
 
@@ -55,7 +55,7 @@
 
         <slf4j.version>2.0.19</slf4j.version>
         <logback.version>1.6.3</logback.version>
-        <wiremock.version>3.13.2</wiremock.version>
+        <wiremock.version>4.0.0-beta.40</wiremock.version>
 
         <junit.version>4.13.2</junit.version>
 
@@ -64,9 +64,9 @@
         <license.organizationName>Andreas Kuehne</license.organizationName>
 
         <dependencyCheck.version>13.0.0</dependencyCheck.version>
-        <dependencyCheck.skip>true</dependencyCheck.skip>
+        <dependencyCheck.skip>false</dependencyCheck.skip>
 
-        <maven.autoPublish>false</maven.autoPublish>
+        <maven.autoPublish>true</maven.autoPublish>
 
     </properties>
 

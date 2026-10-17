@@ -208,7 +208,8 @@ public class ChallengeValidator {
                 .build();
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(Timeout.ofMilliseconds(2000L))
+                .setResponseTimeout(Timeout.ofMilliseconds(timeoutMilliSec))
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(timeoutMilliSec))
                 .build();
 
         BasicHttpClientConnectionManager cm = new BasicHttpClientConnectionManager();
@@ -533,12 +534,12 @@ public class ChallengeValidator {
      * @param lookupResult Optional
      * @return Never <code>null</code>
      */
-    private List<String> extractTokenFrom(final org.xbill.DNS.Record[] lookupResult) {
+    List<String> extractTokenFrom(final org.xbill.DNS.Record[] lookupResult) {
 
         List<String> tokenList = new ArrayList<>();
         if( lookupResult != null) {
             for (org.xbill.DNS.Record record : lookupResult) {
-                LOG.debug("Found DNS entry solving '{}'", record);
+                LOG.debug("Found DNS entry solving '{}' with {} tokens", record, ((TXTRecord) record).getStrings().size());
                 tokenList.addAll(((TXTRecord) record).getStrings());
             }
         }
